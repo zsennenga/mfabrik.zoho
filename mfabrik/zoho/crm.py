@@ -44,7 +44,7 @@ class CRM(Connection):
             
         return output
     
-    def _prepare_xml_request(self, module, leads):
+    def _prepare_xml_request(self, module, leads, element_name="FL"):
         root = Element(module)
         
         # Row counter
@@ -58,14 +58,14 @@ class CRM(Connection):
             for key, value in lead.items():
                 # <FL val="Lead Source">Web Download</FL>
                 # <FL val="First Name">contacto 1</FL>
-                fl = Element("FL", val=key)
+                fl = Element(element_name, val=key)
                 if type(value) == dict: # If it's an attached module, accept multiple groups
                     mod_attach_no = 1
                     for module_key, module_value in value.items(): # The first group defines the module name, yank that and iterate through the contents
                         for mod_item in module_value:
                             mod_fl = SubElement(fl, module_key, no=str(mod_attach_no))
                             for mod_item_key, mod_item_value in mod_item.items():
-                                attach_fl = SubElement(mod_fl, "FL", val=mod_item_key)
+                                attach_fl = SubElement(mod_fl, element_name, val=mod_item_key)
                                 attach_fl.text = mod_item_value
                             mod_attach_no += 1
                 elif type(value) != str:
@@ -114,6 +114,38 @@ class CRM(Connection):
         self.check_successful_xml(response)
         
         return self.get_inserted_records(response)
+
+    def convert_lead(self, leads, extra_post_parameters={}):
+        """ Converts leads for the Zoho CRM database.
+
+        @param leads: List of dictionaries (easiest is to pass the record dict as found in get_records).
+            The only key that matters is the USERID
+
+        @param extra_post_parameters: Parameters appended to the HTTP POST call.
+            Described in Zoho CRM API.
+
+        @return: List of record ids which were converted
+        """
+        self.ensure_opened()
+        responses = []
+        for lead in leads:
+            new_dict = {
+                "createPotential": False,
+                "assignTo": self.get_service_name(),
+                "notifyLeadOwner": True,
+                "notifyNewEntityOwner": True}
+            xmldata = self._prepare_xml_request("Potentials", [new_dict], element_name='option')
+            post = {
+                'newFormat':    1,
+                'duplicateCheck':   2,
+                'leadId': lead['LEADID']
+            }
+
+            post.update(extra_post_parameters)
+            response = self.do_xml_call("https://crm.zoho.com/crm/private/xml/Leads/convertLead", post, xmldata)
+            self.check_successful_xml(response)
+            responses.append(self.get_converted_records(response))
+        return responses
     
     def get_records(self, selectColumns='leads(First Name,Last Name,Company)', parameters={}):
         """ 

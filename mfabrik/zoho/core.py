@@ -243,6 +243,18 @@ class Connection(object):
         
         return True
 
+    def get_converted_records(self, response):
+        """
+        @return: Dict of ids which were converted by convert_leads
+        """
+        root = fromstring(response)
+
+        record = {}
+        for i in ("Contact", "Account"):
+            element = root.find(i)
+            record[element.get('param')] = element.text
+        return record
+
     def get_inserted_records(self, response):
         """
         @return: List of record ids which were created by insert recoreds
