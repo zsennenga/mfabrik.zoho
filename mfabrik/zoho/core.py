@@ -196,7 +196,7 @@ class Connection(object):
         parameters["authtoken"] = self.authtoken
         parameters["scope"] = self.scope
 
-        stringify(parameters)
+        parameters = stringify(parameters)
 
         if logger.getEffectiveLevel() == logging.DEBUG:
             # Output Zoho API call payload
@@ -271,8 +271,11 @@ class Connection(object):
 
 def stringify(params):
     """ Make sure all params are urllib compatible strings """
+    new_dict = {}
     for key, value in params.items():
-        params[key] = str(value).encode()
+        new_dict[key] = str(value).encode()
+        
+    return new_dict
 
 
 def decode_json(json_data):
