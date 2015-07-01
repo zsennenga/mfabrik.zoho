@@ -272,14 +272,7 @@ class Connection(object):
 def stringify(params):
     """ Make sure all params are urllib compatible strings """
     for key, value in params.items():
-
-        if type(value) == str:
-            params[key] == value.decode("utf-8")
-        elif type(value) == str:
-            pass
-        else:
-            # call __unicode__ of object
-            params[key] = str(value)
+        params[key] = str(value)
 
 
 def decode_json(json_data):
