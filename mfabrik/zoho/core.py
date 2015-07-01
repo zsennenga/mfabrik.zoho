@@ -204,8 +204,8 @@ class Connection(object):
             for key, value in parameters.items():
                 logger.debug(key + ": " + value)
         self.parameters = parameters
-        self.parameters_encoded = urllib.parse.urlencode(parameters)
-        request = urllib.request.Request(url, urllib.parse.urlencode(parameters))
+        self.parameters_encoded = urllib.parse.urlencode(parameters).encode()
+        request = urllib.request.Request(url, urllib.parse.urlencode(parameters).encode())
         response = urllib.request.urlopen(request).read()
 
         if logger.getEffectiveLevel() == logging.DEBUG:
