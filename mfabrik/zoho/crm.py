@@ -20,7 +20,7 @@ except ImportError:
     except ImportError:
         raise RuntimeError("XML library not available:  no etree, no lxml")
    
-from core import Connection, ZohoException, decode_json
+from .core import Connection, ZohoException, decode_json
 
 class CRM(Connection):
     """ CRM specific Zoho APIs mapped to Python """
