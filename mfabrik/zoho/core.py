@@ -115,7 +115,7 @@ class Connection(object):
         }
 
         request_url = "https://accounts.zoho.com/login"
-        request = urllib.request.Request(request_url, urllib.parse.urlencode(params))
+        request = urllib.request.Request(request_url, urllib.parse.urlencode(params).encode())
         body = urllib.request.urlopen(request).read()
 
         data = self._parse_ticket_response(body)
@@ -273,7 +273,7 @@ def stringify(params):
     """ Make sure all params are urllib compatible strings """
     new_dict = {}
     for key, value in params.items():
-        new_dict[key] = str(value).encode()
+        new_dict[key] = str(value)
         
     return new_dict
 
