@@ -3,27 +3,26 @@
     Zoho API core functions.
 
 """
-
 __copyright__ = "2010 mFabrik Research Oy"
 __author__ = "Mikko Ohtamaa <mikko@mfabrik.com>"
 __license__ = "GPL"
 __docformat__ = "Epytext"
 
-import urllib, urllib2
-
+import urllib
+import urllib.request
+import urllib.parse
 import logging
 
 try:
     from xml import etree
     from xml.etree.ElementTree import Element, tostring, fromstring
 except ImportError:
-     try:
-         from lxml import etree
-         from lxml.etree import  Element, tostring, fromstring
-     except ImportError:
-         print "XML library not available:  no etree, no lxml"
-         raise
-
+    try:
+        from lxml import etree
+        from lxml.etree import Element, tostring, fromstring
+    except ImportError:
+        print("XML library not available:  no etree, no lxml")
+        raise
 
 try:
     import json as simplejson
@@ -33,7 +32,6 @@ except ImportError:
     except ImportError:
         # Python 2.4, no simplejson installed
         raise RuntimeError("You need json or simplejson library with your Python")
-
 
 logger = logging.getLogger("Zoho API")
 
@@ -108,7 +106,7 @@ class Connection(object):
 
         @return: Ticket code
         """
-        #servicename=ZohoCRM&FROM_AGENT=true&LOGIN_ID=Zoho Username or Email Address&PASSWORD=Password
+        # servicename=ZohoCRM&FROM_AGENT=true&LOGIN_ID=Zoho Username or Email Address&PASSWORD=Password
         params = {
             'servicename': self.get_service_name(),
             'FROM_AGENT': 'true',
@@ -117,8 +115,8 @@ class Connection(object):
         }
 
         request_url = "https://accounts.zoho.com/login"
-        request = urllib2.Request(request_url, urllib.urlencode(params))
-        body = urllib2.urlopen(request).read()
+        request = urllib.request.Request(request_url, urllib.parse.urlencode(params))
+        body = urllib.request.urlopen(request).read()
 
         data = self._parse_ticket_response(body)
 
@@ -206,9 +204,9 @@ class Connection(object):
             for key, value in parameters.items():
                 logger.debug(key + ": " + value)
         self.parameters = parameters
-        self.parameters_encoded = urllib.urlencode(parameters)
-        request = urllib2.Request(url, urllib.urlencode(parameters))
-        response = urllib2.urlopen(request).read()
+        self.parameters_encoded = urllib.parse.urlencode(parameters)
+        request = urllib.request.Request(url, urllib.parse.urlencode(parameters))
+        response = urllib.request.urlopen(request).read()
 
         if logger.getEffectiveLevel() == logging.DEBUG:
             # Output Zoho API call payload
@@ -231,16 +229,16 @@ class Connection(object):
         # <response uri="/crm/private/xml/Leads/insertRecords"><result><message>Record(s) added successfully</message><recorddetail><FL val="Id">177376000000142007</FL><FL val="Created Time">2010-06-27 21:37:20</FL><FL val="Modified Time">2010-06-27 21:37:20</FL><FL val="Created By">Ohtamaa</FL><FL val="Modified By">Ohtamaa</FL></recorddetail></result></response>
 
         root = fromstring(response)
-            
+
         # Check error response
         # <response uri="/crm/private/xml/Leads/insertRecords"><error><code>4401</code><message>Unable to populate data, please check if mandatory value is entered correctly.</message></error></response>
         for error in root.findall("error"):
             parameters = self.parameters
             parameters_encoded = self.parameters_encoded
-            print "Got error"
+            print("Got error")
             for message in error.findall("message"):
                 raise ZohoException(message.text)
-        
+
         return True
 
     def get_converted_records(self, response):
@@ -260,7 +258,7 @@ class Connection(object):
         @return: List of record ids which were created by insert recoreds
         """
         root = fromstring(response)
-        
+
         records = []
         for result in root.findall("result"):
             for record in result.findall("recorddetail"):
@@ -270,17 +268,18 @@ class Connection(object):
                 records.append(record_detail)
         return records
 
+
 def stringify(params):
     """ Make sure all params are urllib compatible strings """
     for key, value in params.items():
 
         if type(value) == str:
             params[key] == value.decode("utf-8")
-        elif type(value) == unicode:
+        elif type(value) == str:
             pass
         else:
             # call __unicode__ of object
-            params[key] = unicode(value)
+            params[key] = str(value)
 
 
 def decode_json(json_data):
